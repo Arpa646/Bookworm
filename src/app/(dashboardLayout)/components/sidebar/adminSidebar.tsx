@@ -110,6 +110,18 @@ export const AdminSidebarWrapper = () => {
       href: "/admin-dashboard/users",
       isActive: pathname === "/admin-dashboard/users" || pathname.startsWith("/admin-dashboard/users/"),
     },
+    {
+      id: "tutorial",
+      title: "Tutorials",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="10 8 16 12 10 16 10 8" />
+        </svg>
+      ),
+      href: "/admin-dashboard/tutorial",
+      isActive: pathname === "/admin-dashboard/tutorial" || pathname.startsWith("/admin-dashboard/tutorial/"),
+    },
   ];
 
   const NavItem = ({ item }: { item: typeof menuItems[0] }) => (
