@@ -14,11 +14,12 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { useSelector } from "react-redux";
 import { useCurrentUser } from "@/GlobalRedux/Features/auth/authSlice";
+import { User, Review, Shelf } from "@/types";
 
 const BookDetailsPage = () => {
   const params = useParams();
   const bookId = params.id as string;
-  const user = useSelector(useCurrentUser) as any;
+  const user = useSelector(useCurrentUser) as User | null;
 
   const { data: bookData, isLoading } = useGetSingleBookQuery(bookId);
   const { data: reviewsData, refetch: refetchReviews } = useGetBookReviewsQuery(bookId);
@@ -28,10 +29,10 @@ const BookDetailsPage = () => {
   const [updateReadingProgress] = useUpdateReadingProgressMutation();
 
   const book = bookData?.data;
-  const reviews = reviewsData?.data?.filter((r: any) => r.status === "approved") || [];
+  const reviews = reviewsData?.data?.filter((r: Review) => r.status === "approved") || [];
 
   const shelves = libraryData?.data || [];
-  const currentShelf = shelves.find((shelf: any) => {
+  const currentShelf = shelves.find((shelf: Shelf) => {
     const shelfBookId = typeof shelf.bookId === "object" ? shelf.bookId._id : shelf.bookId;
     return shelfBookId === bookId;
   });
@@ -76,9 +77,10 @@ const BookDetailsPage = () => {
       toast.success("Review submitted! It will be visible after approval.");
       setReviewForm({ rating: 5, comment: "" });
       refetchReviews();
-    } catch (error: any) {
+    } catch (error) {
+      const apiError = error as ApiError;
       const errorMessage =
-        error?.data?.message || error?.data?.error || error?.message || "Failed to submit review";
+        apiError?.data?.message || apiError?.data?.error || apiError?.message || "Failed to submit review";
       toast.error(errorMessage);
     }
   };
@@ -97,8 +99,9 @@ const BookDetailsPage = () => {
       };
       toast.success(`Added to ${statusLabels[status]} shelf`);
       refetchShelves();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to add to shelf");
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError?.data?.message || "Failed to add to shelf");
     }
   };
 
@@ -129,14 +132,15 @@ const BookDetailsPage = () => {
       toast.success("Progress updated!");
       setProgressForm({ pagesRead: "" });
       refetchShelves();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update progress");
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError?.data?.message || "Failed to update progress");
     }
   };
 
   const averageRating =
     reviews.length > 0
-      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
+      ? reviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / reviews.length
       : 0;
 
   if (isLoading) {
@@ -924,7 +928,7 @@ const BookDetailsPage = () => {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {reviews.map((review: any, index: number) => (
+                  {reviews.map((review: Review) => (
                     <div
                       key={review._id}
                       style={{

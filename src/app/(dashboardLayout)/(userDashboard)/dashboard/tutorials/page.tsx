@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useGetAllTutorialsQuery } from "@/GlobalRedux/api/api";
+import Image from "next/image";
+
+interface Tutorial {
+  _id: string;
+  title: string;
+  youtubeUrl: string;
+  category: string;
+}
 
 const categories = ["All", "Recommendation", "Getting Started", "Discovery", "Reviews", "Goals", "Tips", "Community"];
 
@@ -11,6 +19,7 @@ const TutorialsPage = () => {
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -23,7 +32,7 @@ const TutorialsPage = () => {
 
   const filteredVideos = selectedCategory === "All" 
     ? tutorials 
-    : tutorials.filter((tutorial: any) => tutorial.category === selectedCategory);
+    : tutorials.filter((tutorial: Tutorial) => tutorial.category === selectedCategory);
 
   // Extract video ID from YouTube URL (supports multiple formats)
   const getVideoId = (url: string) => {
@@ -91,7 +100,7 @@ const TutorialsPage = () => {
           >
             <div style={{ position: "relative", paddingTop: "56.25%" }}>
               {(() => {
-                const tutorial = tutorials.find((t: any) => t._id === playingVideo);
+                const tutorial = tutorials.find((t: Tutorial) => t._id === playingVideo);
                 return tutorial ? (
                   <iframe
                     src={tutorial.youtubeUrl}
@@ -107,7 +116,7 @@ const TutorialsPage = () => {
               <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: "16px" }}>
                 <div>
                   {(() => {
-                    const tutorial = tutorials.find((t: any) => t._id === playingVideo);
+                    const tutorial = tutorials.find((t: Tutorial) => t._id === playingVideo);
                     return tutorial ? (
                       <>
                         <span style={{ display: "inline-block", padding: "4px 12px", background: "rgba(220, 38, 38, 0.15)", borderRadius: "20px", color: "#ef4444", fontSize: "11px", fontWeight: 500, marginBottom: "12px" }}>
@@ -222,7 +231,7 @@ const TutorialsPage = () => {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: "24px" }}>
-            {filteredVideos.map((tutorial: any, index: number) => {
+            {filteredVideos.map((tutorial: Tutorial, index: number) => {
               const videoId = getVideoId(tutorial.youtubeUrl);
               return (
                 <div
@@ -246,13 +255,15 @@ const TutorialsPage = () => {
                   {/* Thumbnail */}
                   <div style={{ position: "relative", paddingTop: "56.25%", background: "linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(10, 10, 10, 1) 100%)" }}>
                     {videoId ? (
-                      <img
-                        src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                      <Image
+                        src={imageErrors[videoId] ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                         alt={tutorial.title}
-                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hoveredVideo === tutorial._id ? "scale(1.1)" : "scale(1)" }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                        fill
+                        style={{ objectFit: "cover", transition: "transform 0.5s ease", transform: hoveredVideo === tutorial._id ? "scale(1.1)" : "scale(1)" }}
+                        onError={() => {
+                          setImageErrors((prev) => ({ ...prev, [videoId]: true }));
                         }}
+                        unoptimized
                       />
                     ) : null}
                     

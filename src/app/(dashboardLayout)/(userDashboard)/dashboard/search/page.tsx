@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import { useSearchBooksQuery, useGetAllGenresQuery, useGetAllBooksQuery } from "@/GlobalRedux/api/api";
 import Image from "next/image";
 import Link from "next/link";
+import { Book } from "@/types";
+
+interface Genre {
+  _id: string;
+  name: string;
+}
 
 const SearchPage = () => {
   const { data: genresData } = useGetAllGenresQuery({});
@@ -45,12 +51,12 @@ const SearchPage = () => {
   const isLoading = hasActiveFilters ? isLoadingSearch : isLoadingAll;
   const books = hasActiveFilters ? (searchResults?.data || []) : (allBooksData?.data || []);
 
-  const handleGenreToggle = (genreName: string) => {
+  const handleGenreToggle = (genreId: string) => {
     setSearchParams((prev) => ({
       ...prev,
-      genres: prev.genres.includes(genreName)
-        ? prev.genres.filter((name) => name !== genreName)
-        : [...prev.genres, genreName],
+      genres: prev.genres.includes(genreId)
+        ? prev.genres.filter((id) => id !== genreId)
+        : [...prev.genres, genreId],
     }));
   };
 
@@ -215,19 +221,19 @@ const SearchPage = () => {
                   Genres <span style={{ color: "rgba(255, 255, 255, 0.3)" }}>(Multi-select)</span>
                 </label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                  {genres.map((genre: any) => (
+                  {genres.map((genre: Genre) => (
                     <button
                       key={genre._id}
-                      onClick={() => handleGenreToggle(genre.name)}
+                      onClick={() => handleGenreToggle(genre._id)}
                       style={{
                         padding: "8px 16px",
-                        background: searchParams.genres.includes(genre.name) ? "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)" : "rgba(255, 255, 255, 0.03)",
-                        border: searchParams.genres.includes(genre.name) ? "none" : "1px solid rgba(255, 255, 255, 0.1)",
+                        background: searchParams.genres.includes(genre._id) ? "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)" : "rgba(255, 255, 255, 0.03)",
+                        border: searchParams.genres.includes(genre._id) ? "none" : "1px solid rgba(255, 255, 255, 0.1)",
                         borderRadius: "20px",
-                        color: searchParams.genres.includes(genre.name) ? "#ffffff" : "rgba(255, 255, 255, 0.6)",
+                        color: searchParams.genres.includes(genre._id) ? "#ffffff" : "rgba(255, 255, 255, 0.6)",
                         fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif",
                         transition: "all 0.3s ease",
-                        boxShadow: searchParams.genres.includes(genre.name) ? "0 4px 15px rgba(220, 38, 38, 0.3)" : "none",
+                        boxShadow: searchParams.genres.includes(genre._id) ? "0 4px 15px rgba(220, 38, 38, 0.3)" : "none",
                       }}
                     >
                       {genre.name}
@@ -316,7 +322,7 @@ const SearchPage = () => {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "160px" : "200px"}, 1fr))`, gap: "24px" }}>
-            {books.map((book: any, index: number) => {
+            {books.map((book: Book, index: number) => {
               const bookId = book._id || book.id;
               if (!bookId) return null;
 

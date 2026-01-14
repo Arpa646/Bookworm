@@ -21,6 +21,13 @@ interface LoginForm {
   password: string;
 }
 
+interface JwtPayload {
+  role?: string;
+  userId?: string;
+  useremail?: string;
+  [key: string]: unknown;
+}
+
 const LoginPage: React.FC = () => {
   const router = useRouter();
   const [LogIn] = useLogInMutation();
@@ -67,7 +74,7 @@ const LoginPage: React.FC = () => {
         });
 
         toast.success("Login successful!");
-        const userRole = (user as any)?.role;
+        const userRole = (user as JwtPayload)?.role;
         if (userRole === "admin") {
           router.push("/admin-dashboard");
         } else {

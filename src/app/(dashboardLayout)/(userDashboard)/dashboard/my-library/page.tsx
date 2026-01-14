@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useGetMyLibraryQuery } from "@/GlobalRedux/api/api";
 import Image from "next/image";
 import Link from "next/link";
+import { Shelf } from "@/types";
 
 const MyLibraryPage = () => {
   const { data: libraryData, isLoading } = useGetMyLibraryQuery({});
@@ -22,10 +23,10 @@ const MyLibraryPage = () => {
   }, []);
 
   // Group shelves by status
-  const shelves = libraryData?.data || [];
+  const shelves = useMemo(() => libraryData?.data || [], [libraryData?.data]);
   const groupedShelves = useMemo(() => {
-    const grouped: Record<string, any[]> = { want: [], reading: [], read: [] };
-    shelves.forEach((shelf: any) => {
+    const grouped: Record<string, Shelf[]> = { want: [], reading: [], read: [] };
+    shelves.forEach((shelf: Shelf) => {
       if (shelf.status && grouped[shelf.status]) {
         grouped[shelf.status].push(shelf);
       }
@@ -221,7 +222,7 @@ const MyLibraryPage = () => {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "160px" : "200px"}, 1fr))`, gap: "24px" }}>
-            {shelfBooks.map((shelf: any, index: number) => {
+            {shelfBooks.map((shelf: Shelf, index: number) => {
               const book = shelf.bookId || shelf.book || shelf;
               const bookId = typeof book === "object" ? (book._id || book.id) : book;
               const bookData = typeof book === "object" ? book : null;

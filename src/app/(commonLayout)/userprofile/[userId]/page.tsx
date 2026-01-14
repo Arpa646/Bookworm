@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   useGetSingleUserQuery,
   useGetAllUserQuery,
@@ -62,11 +63,13 @@ const UserProfilePage = ({ params }) => {
         {/* User Info */}
         <div className="bg-gray-100 p-4 rounded-lg shadow-md">
           <div className="flex items-center justify-center space-x-4 md:space-x-8">
-            <div className="mb-4">
-              <img
-                className="rounded-full w-32 h-32 md:w-44 md:h-44"
+            <div className="mb-4 relative w-32 h-32 md:w-44 md:h-44">
+              <Image
+                className="rounded-full object-cover"
                 src={profileUser?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D"}
                 alt="Profile Picture"
+                fill
+                sizes="(max-width: 768px) 128px, 176px"
               />
             </div>
             <div className="text-center font-bold space-y-3">
@@ -141,10 +144,12 @@ const UserProfilePage = ({ params }) => {
               className="bg-gray-200 p-2 flex items-center justify-between rounded-lg shadow-md"
             >
               <div className="flex items-center">
-                <img
+                <Image
                   src={user?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D"}
                   alt={user.name}
-                  className="w-8 h-8 rounded-full mr-2"
+                  className="rounded-full mr-2"
+                  width={32}
+                  height={32}
                 />
                 <p>{user.name}</p>
               </div>

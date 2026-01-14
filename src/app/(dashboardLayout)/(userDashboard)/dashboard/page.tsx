@@ -11,9 +11,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { useCurrentUser } from "@/GlobalRedux/Features/auth/authSlice";
+import { User, Shelf, Book } from "@/types";
 
 const UserDashboardPage = () => {
-  const user = useSelector(useCurrentUser) as any;
+  const user = useSelector(useCurrentUser) as User | null;
   const userId = user?._id || user?.id;
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
 
@@ -24,16 +25,16 @@ const UserDashboardPage = () => {
   });
   const { data: recommendationsData, isLoading: isLoadingRecs } = useGetRecommendationsQuery({});
 
-  const allBooks = allBooksData?.data || [];
+  const allBooks = useMemo(() => allBooksData?.data || [], [allBooksData?.data]);
   const stats = statsData?.data || {};
   const shelves = libraryData?.data || [];
-  const readBooks = shelves.filter((shelf: any) => shelf.status === "read") || [];
+  const readBooks = shelves.filter((shelf: Shelf) => shelf.status === "read") || [];
 
   const recommendations = useMemo(() => {
     if (recommendationsData?.data?.recommendations && recommendationsData?.data?.recommendations.length > 0) {
       return recommendationsData.data.recommendations;
     }
-    return allBooks.slice(0, 18).map((book: any) => ({
+    return allBooks.slice(0, 18).map((book: Book) => ({
       ...book,
       reason: "Popular in our collection",
     }));
@@ -281,7 +282,7 @@ const UserDashboardPage = () => {
             marginBottom: "40px",
           }}
         >
-          {statsCards.map((stat, index) => (
+          {statsCards.map((stat) => (
             <div
               key={stat.title}
               className="stat-card"
@@ -443,7 +444,7 @@ const UserDashboardPage = () => {
                 gap: "24px",
               }}
             >
-              {displayBooks.map((item: any, index: number) => {
+              {displayBooks.map((item: Book & { reason?: string; recommendationReason?: string; averageRating?: number; totalRatings?: number; book?: Book }, index: number) => {
                 // Extract book data from nested structure or use directly
                 const book = item.book ? item.book : item;
                 const reason = item.recommendationReason || item.reason || "Popular in our collection";

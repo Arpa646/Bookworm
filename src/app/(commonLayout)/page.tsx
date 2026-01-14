@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useCurrentUser } from "@/GlobalRedux/Features/auth/authSlice";
 
+interface JwtPayload {
+  role?: string;
+  userId?: string;
+  useremail?: string;
+  [key: string]: unknown;
+}
+
 const Welcome = () => {
   const router = useRouter();
   const user = useSelector(useCurrentUser);
@@ -12,7 +19,7 @@ const Welcome = () => {
   useEffect(() => {
     // This will be handled by middleware, but as a fallback:
     if (user) {
-      const role = (user as any)?.role;
+      const role = (user as JwtPayload)?.role;
       if (role === "admin") {
         router.push("/admin-dashboard");
       } else {
