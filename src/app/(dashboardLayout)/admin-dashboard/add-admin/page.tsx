@@ -31,8 +31,32 @@ const AddAdmin: React.FC = () => {
     try {
       await signUp({ user: formData }).unwrap(); // Send form data to backend
       alert("User registered successfully!");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to register user:", err);
+      // Check for duplicate email error (MongoDB E11000)
+      const errorMessage = 
+        err?.data?.message || 
+        err?.data?.error ||
+        err?.error || 
+        "";
+      
+      // Convert error to string for checking
+      const errorString = JSON.stringify(err || {}).toLowerCase();
+      const messageString = errorMessage.toLowerCase();
+      
+      // Check if it's a duplicate email error
+      if (
+        messageString.includes("e11000") ||
+        messageString.includes("duplicate key") ||
+        messageString.includes("email_1") ||
+        errorString.includes("e11000") ||
+        errorString.includes("duplicate key") ||
+        errorString.includes("email_1")
+      ) {
+        alert("User already exists with this email. Please use a different email address.");
+      } else {
+        alert("Failed to register user. Please try again.");
+      }
     }
   };
 

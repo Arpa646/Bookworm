@@ -1,6 +1,6 @@
 "use client";
 
-import GoogleLoginBtn from "../components/page/shared/GoogleLoginBtn";
+
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { setUser } from "@/GlobalRedux/Features/auth/authSlice";
@@ -612,8 +612,7 @@ const LoginPage: React.FC = () => {
             <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)" }} />
           </div>
 
-          {/* Google login */}
-          <GoogleLoginBtn />
+        
         </div>
 
         {/* Create account */}

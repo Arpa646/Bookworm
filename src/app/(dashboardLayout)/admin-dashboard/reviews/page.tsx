@@ -168,10 +168,10 @@ const ReviewsPage = () => {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {pendingReviews.map((review: Review, index: number) => {
-              const bookTitle = review.bookId && typeof review.bookId === "object" ? review.bookId.title : "Unknown Book";
+              const bookTitle = review.bookId && typeof review.bookId === "object" ? review.bookId?.title : "Unknown Book";
               const bookCover = review.bookId && typeof review.bookId === "object" ? review.bookId.coverImage : null;
               const userName = review.userId && typeof review.userId === "object" ? review.userId.name || review.userId.email : review.userId || "Anonymous";
-
+ console.log("this is the book id",review);
               return (
                 <div
                   key={review._id}

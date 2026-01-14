@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Footer from "./components/page/shared/Footer";
-import NavBar from "./components/page/shared/Navnar";
+import ConditionalFooter from "./components/page/shared/ConditionalFooter";
+import ConditionalNavbar from "./components/page/shared/ConditionalNavbar";
 
 export const metadata: Metadata = {
   title: "Apollo Gears",
@@ -14,9 +14,9 @@ export default function DashboardLayout({
 }>) {
   return (
     <div>
-      <NavBar></NavBar>
+      <ConditionalNavbar />
       {children}
-      <Footer></Footer>
+      <ConditionalFooter />
     </div>
   );
 }

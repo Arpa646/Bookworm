@@ -195,15 +195,46 @@ const Reg: React.FC = () => {
       await signUp({ user: formData }).unwrap();
       toast.success("Account created successfully!");
       router.push("/login");
-    } catch (err) {
+    } catch (err: any) {
       const error = err as SignUpError;
-      if (error.data?.message) {
-        setErrorMessage(error.data.message);
+      let errorMsg = "Failed to register user. Please try again.";
+      
+      // Check for duplicate email error (MongoDB E11000)
+      // RTK Query errors can be in different formats
+      const errorMessage = 
+        error.data?.message || 
+        error.error || 
+        err?.data?.message || 
+        err?.data?.error ||
+        err?.error || 
+        "";
+      
+      // Convert error to string for checking
+      const errorString = JSON.stringify(err || {}).toLowerCase();
+      const messageString = errorMessage.toLowerCase();
+      
+      // Check if it's a duplicate email error
+      if (
+        messageString.includes("e11000") ||
+        messageString.includes("duplicate key") ||
+        messageString.includes("email_1") ||
+        errorString.includes("e11000") ||
+        errorString.includes("duplicate key") ||
+        errorString.includes("email_1")
+      ) {
+        errorMsg = "User already exists with this email. Please use a different email address.";
+      } else if (error.data?.message) {
+        errorMsg = error.data.message;
       } else if (error.error) {
-        setErrorMessage(error.error);
-      } else {
-        setErrorMessage("Failed to register user. Please try again.");
+        errorMsg = error.error;
+      } else if (err?.data?.message) {
+        errorMsg = err.data.message;
+      } else if (err?.data?.error) {
+        errorMsg = err.data.error;
       }
+      
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
