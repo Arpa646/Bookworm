@@ -11,7 +11,8 @@ interface RootState {
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
+    baseUrl: "https://book-worm-backend-five.vercel.app/api",
+    
     credentials: "include",
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
@@ -283,6 +284,32 @@ export const baseApi = createApi({
       }),
     }),
 
+    // Ratings Endpoints
+    createRating: builder.mutation({
+      query: (ratingData) => {
+        console.log("Creating rating with data:", ratingData);
+        return {
+          url: "/ratings",
+          method: "POST",
+          body: ratingData,
+        };
+      },
+    }),
+
+    getBookRatings: builder.query({
+      query: (bookId) => ({
+        url: `/ratings/book/${bookId}`,
+        method: "GET",
+      }),
+    }),
+
+    getMyRating: builder.query({
+      query: (bookId) => ({
+        url: `/ratings/book/${bookId}/my-rating`,
+        method: "GET",
+      }),
+    }),
+
     // Reviews Endpoints
     createReview: builder.mutation({
       query: (reviewData) => {
@@ -474,6 +501,11 @@ export const {
   useCreateGenreMutation,
   useUpdateGenreMutation,
   useDeleteGenreMutation,
+
+  // Ratings
+  useCreateRatingMutation,
+  useGetBookRatingsQuery,
+  useGetMyRatingQuery,
 
   // Reviews
   useCreateReviewMutation,

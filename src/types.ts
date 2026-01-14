@@ -19,10 +19,12 @@ export interface User {
   }
   
   export interface Rating {
-    user: User; // Reference to the User interface
-    rating?: number; // Optional comment
-    // Optional rating, e.g., 1 to 5
-    date: Date;
+    _id: string;
+    bookId: string | Book;
+    userId: string | User;
+    rating: number; // Rating from 1 to 5
+    createdAt?: string;
+    isDeleted?: boolean;
   }
 
   export interface Book {

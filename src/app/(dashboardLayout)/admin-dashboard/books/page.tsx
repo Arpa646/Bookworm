@@ -17,6 +17,8 @@ const BooksPage = () => {
   const [editingBookId, setEditingBookId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -37,6 +39,17 @@ const BooksPage = () => {
       (typeof book.genre === "object" ? book.genre?.name : book.genre)?.toLowerCase().includes(query)
     );
   }, [books, searchQuery]);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBooks = useMemo(() => filteredBooks.slice(startIndex, endIndex), [filteredBooks, startIndex, endIndex]);
 
   const handleDelete = async () => {
     if (bookToDelete) {
@@ -224,7 +237,7 @@ const BooksPage = () => {
           ) : viewMode === "grid" ? (
             /* Grid View */
             <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "240px" : "260px"}, 1fr))`, gap: "24px" }}>
-              {filteredBooks.map((book: { _id: string; title: string; author: string; coverImage?: string; genre?: { name?: string } | string; pages?: number; isPublished?: boolean }, index: number) => (
+              {paginatedBooks.map((book: { _id: string; title: string; author: string; coverImage?: string; genre?: { name?: string } | string; pages?: number; isPublished?: boolean }, index: number) => (
                 <div key={book._id} className="book-card" style={{ background: "linear-gradient(145deg, rgba(20, 20, 20, 0.9) 0%, rgba(12, 12, 12, 0.95) 100%)", borderRadius: "20px", border: hoveredBook === book._id ? "1px solid rgba(220, 38, 38, 0.4)" : "1px solid rgba(255, 255, 255, 0.05)", overflow: "hidden", transition: "all 0.3s ease", transform: hoveredBook === book._id ? "translateY(-8px)" : "translateY(0)", boxShadow: hoveredBook === book._id ? "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 38, 38, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.2)", animationDelay: `${0.05 + index * 0.03}s` }} onMouseEnter={() => setHoveredBook(book._id)} onMouseLeave={() => setHoveredBook(null)}>
                   {/* Cover */}
                   <div style={{ position: "relative", height: "220px", width: "100%", overflow: "hidden" }}>
@@ -260,7 +273,7 @@ const BooksPage = () => {
           ) : (
             /* List View */
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {filteredBooks.map((book: { _id: string; title: string; author: string; coverImage?: string; genre?: { name?: string } | string; pages?: number; isPublished?: boolean }, index: number) => (
+              {paginatedBooks.map((book: { _id: string; title: string; author: string; coverImage?: string; genre?: { name?: string } | string; pages?: number; isPublished?: boolean }, index: number) => (
                 <div key={book._id} className="book-card" style={{ background: "linear-gradient(145deg, rgba(20, 20, 20, 0.9) 0%, rgba(12, 12, 12, 0.95) 100%)", borderRadius: "16px", border: hoveredBook === book._id ? "1px solid rgba(220, 38, 38, 0.4)" : "1px solid rgba(255, 255, 255, 0.05)", padding: "16px", display: "flex", gap: "16px", alignItems: "center", transition: "all 0.3s ease", animationDelay: `${0.02 + index * 0.02}s` }} onMouseEnter={() => setHoveredBook(book._id)} onMouseLeave={() => setHoveredBook(null)}>
                   {/* Thumbnail */}
                   <div style={{ position: "relative", width: "60px", height: "80px", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
@@ -291,6 +304,154 @@ const BooksPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredBooks.length > itemsPerPage && (
+            <div className="animate-fade-in" style={{ marginTop: "40px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+              {/* Previous Button */}
+              <button
+                onClick={() => {
+                  setCurrentPage((prev) => Math.max(1, prev - 1));
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={currentPage === 1}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px",
+                  background: currentPage === 1 ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.05)",
+                  border: currentPage === 1 ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.15)",
+                  borderRadius: "12px", color: currentPage === 1 ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.7)",
+                  fontSize: "14px", fontWeight: 500, cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  fontFamily: "'Outfit', sans-serif", transition: "all 0.3s ease",
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                }}
+                onMouseOver={(e) => {
+                  if (currentPage !== 1) {
+                    e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.4)";
+                    e.currentTarget.style.color = "#ef4444";
+                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentPage !== 1) {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                    e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  }
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Previous
+              </button>
+
+              {/* Page Numbers */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current
+                  const showPage =
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1);
+
+                  if (!showPage) {
+                    // Show ellipsis
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <span key={page} style={{ color: "rgba(255, 255, 255, 0.3)", fontSize: "14px", padding: "0 4px" }}>
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      style={{
+                        minWidth: "40px", height: "40px", padding: "0 12px",
+                        background: currentPage === page ? "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)" : "rgba(255, 255, 255, 0.05)",
+                        border: currentPage === page ? "none" : "1px solid rgba(255, 255, 255, 0.15)",
+                        borderRadius: "10px",
+                        color: currentPage === page ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                        fontSize: "14px", fontWeight: currentPage === page ? 600 : 500,
+                        cursor: "pointer", fontFamily: "'Outfit', sans-serif",
+                        transition: "all 0.3s ease",
+                        boxShadow: currentPage === page ? "0 4px 15px rgba(220, 38, 38, 0.3)" : "none",
+                      }}
+                      onMouseOver={(e) => {
+                        if (currentPage !== page) {
+                          e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.4)";
+                          e.currentTarget.style.color = "#ef4444";
+                          e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (currentPage !== page) {
+                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                          e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                        }
+                      }}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={() => {
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={currentPage === totalPages}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px",
+                  background: currentPage === totalPages ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.05)",
+                  border: currentPage === totalPages ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(255, 255, 255, 0.15)",
+                  borderRadius: "12px", color: currentPage === totalPages ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.7)",
+                  fontSize: "14px", fontWeight: 500, cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  fontFamily: "'Outfit', sans-serif", transition: "all 0.3s ease",
+                  opacity: currentPage === totalPages ? 0.5 : 1,
+                }}
+                onMouseOver={(e) => {
+                  if (currentPage !== totalPages) {
+                    e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.4)";
+                    e.currentTarget.style.color = "#ef4444";
+                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentPage !== totalPages) {
+                    e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                    e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                  }
+                }}
+              >
+                Next
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Pagination Info */}
+          {filteredBooks.length > itemsPerPage && (
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+              <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px" }}>
+                Showing {startIndex + 1} - {Math.min(endIndex, filteredBooks.length)} of {filteredBooks.length} books
+              </p>
             </div>
           )}
         </div>
