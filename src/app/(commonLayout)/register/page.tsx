@@ -11,6 +11,7 @@ const Reg: React.FC = () => {
   interface SignUpError {
     data?: {
       message?: string;
+      error?: string;
     };
     error?: string;
   }
@@ -34,6 +35,7 @@ const Reg: React.FC = () => {
     phone: "",
     address: "",
   });
+  console.log()
 
   const [uploading, setUploading] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -195,16 +197,7 @@ const Reg: React.FC = () => {
       toast.success("Account created successfully!");
       router.push("/login");
     } catch (err: unknown) {
-      // Type guard to check if error has the expected shape
-      const isSignUpError = (e: unknown): e is SignUpError => {
-        return (
-          typeof e === "object" &&
-          e !== null &&
-          ("data" in e || "error" in e)
-        );
-      };
-
-      const error = isSignUpError(err) ? err : (err as SignUpError);
+      const error = err as SignUpError;
       let errorMsg = "Failed to register user. Please try again.";
       
       // Check for duplicate email error (MongoDB E11000)
@@ -212,10 +205,13 @@ const Reg: React.FC = () => {
       const errorMessage = 
         error.data?.message || 
         error.error || 
+        (err as SignUpError)?.data?.message || 
+        (err as SignUpError)?.data?.error ||
+        (err as SignUpError)?.error || 
         "";
       
       // Convert error to string for checking
-      const errorString = JSON.stringify(error || {}).toLowerCase();
+      const errorString = JSON.stringify(err || {}).toLowerCase();
       const messageString = errorMessage.toLowerCase();
       
       // Check if it's a duplicate email error
@@ -232,6 +228,13 @@ const Reg: React.FC = () => {
         errorMsg = error.data.message;
       } else if (error.error) {
         errorMsg = error.error;
+      } else {
+        const errTyped = err as SignUpError;
+        if (errTyped?.data?.message) {
+          errorMsg = errTyped.data.message;
+        } else if (errTyped?.data?.error) {
+          errorMsg = errTyped.data.error;
+        }
       }
       
       setErrorMessage(errorMsg);
