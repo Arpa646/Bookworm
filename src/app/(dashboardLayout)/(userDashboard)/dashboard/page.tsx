@@ -624,7 +624,7 @@ const UserDashboardPage = () => {
 
                         {/* Genre and Pages */}
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          {book?.genre && (
+                          {book?.genre?.name && (
                             <span
                               style={{
                                 display: "inline-block",
