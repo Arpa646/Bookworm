@@ -31,6 +31,15 @@ const UsersPage = () => {
   const users = usersData?.data || [];
 
   const handleChangeRole = async (userId: string, newRole: string) => {
+    // Find the current user to check their current role
+    const currentUser = users.find((u: User) => u._id === userId);
+    
+    // Prevent changing to the same role
+    if (currentUser && currentUser.role === newRole) {
+      toast.info(`User is already ${newRole}`);
+      return;
+    }
+    
     try {
       setChangingUserId(userId);
       await changeUserRole({ id: userId, role: newRole }).unwrap();
@@ -172,65 +181,82 @@ const UsersPage = () => {
                   )}
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Button */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {user.role !== "admin" && (
-                    <button
-                      onClick={() => handleChangeRole(user._id, "admin")}
-                      disabled={changingUserId === user._id || isChangingRole}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        background: changingUserId === user._id ? "rgba(220, 38, 38, 0.3)" : "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
-                        border: "none",
-                        borderRadius: "10px",
-                        color: "#ffffff",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        cursor: changingUserId === user._id ? "wait" : "pointer",
-                        fontFamily: "'Outfit', sans-serif",
-                        transition: "all 0.3s ease",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        boxShadow: changingUserId === user._id ? "none" : "0 4px 15px rgba(220, 38, 38, 0.3)",
-                      }}
-                      onMouseOver={(e) => {
-                        if (changingUserId !== user._id) {
-                          e.currentTarget.style.transform = "translateY(-2px)";
+                  <button
+                    onClick={() => handleChangeRole(user._id, user.role === "admin" ? "user" : "admin")}
+                    disabled={changingUserId === user._id || isChangingRole}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      background: changingUserId === user._id 
+                        ? (user.role === "admin" ? "rgba(107, 114, 128, 0.3)" : "rgba(220, 38, 38, 0.3)")
+                        : (user.role === "admin" ? "rgba(107, 114, 128, 0.2)" : "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)"),
+                      border: user.role === "admin" ? "1px solid rgba(107, 114, 128, 0.3)" : "none",
+                      borderRadius: "10px",
+                      color: "#ffffff",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: changingUserId === user._id ? "wait" : "pointer",
+                      fontFamily: "'Outfit', sans-serif",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      boxShadow: changingUserId === user._id ? "none" : (user.role === "admin" ? "0 4px 15px rgba(107, 114, 128, 0.2)" : "0 4px 15px rgba(220, 38, 38, 0.3)"),
+                    }}
+                    onMouseOver={(e) => {
+                      if (changingUserId !== user._id) {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        if (user.role === "admin") {
+                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(107, 114, 128, 0.3)";
+                          e.currentTarget.style.background = "rgba(107, 114, 128, 0.3)";
+                        } else {
                           e.currentTarget.style.boxShadow = "0 6px 20px rgba(220, 38, 38, 0.4)";
                         }
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = changingUserId === user._id ? "none" : "0 4px 15px rgba(220, 38, 38, 0.3)";
-                      }}
-                    >
-                      {changingUserId === user._id ? (
-                        <>
-                          <div style={{ width: "14px", height: "14px", border: "2px solid rgba(255, 255, 255, 0.3)", borderTopColor: "#ffffff", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                          Making Admin...
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                            <path d="M2 17l10 5 10-5" />
-                            <path d="M2 12l10 5 10-5" />
-                          </svg>
-                          Make Admin
-                        </>
-                      )}
-                    </button>
-                  )}
-                  {user.role === "admin" && (
-                    <div style={{ padding: "12px", background: "rgba(220, 38, 38, 0.1)", border: "1px solid rgba(220, 38, 38, 0.2)", borderRadius: "10px", textAlign: "center" }}>
-                      <p style={{ color: "#ef4444", fontSize: "12px", fontWeight: 500, margin: 0 }}>
-                        ✓ Admin User
-                      </p>
-                    </div>
-                  )}
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      if (changingUserId === user._id) {
+                        e.currentTarget.style.boxShadow = "none";
+                      } else {
+                        e.currentTarget.style.boxShadow = user.role === "admin" ? "0 4px 15px rgba(107, 114, 128, 0.2)" : "0 4px 15px rgba(220, 38, 38, 0.3)";
+                        if (user.role === "admin") {
+                          e.currentTarget.style.background = "rgba(107, 114, 128, 0.2)";
+                        }
+                      }
+                    }}
+                  >
+                    {changingUserId === user._id ? (
+                      <>
+                        <div style={{ width: "14px", height: "14px", border: "2px solid rgba(255, 255, 255, 0.3)", borderTopColor: "#ffffff", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                        {user.role === "admin" ? "Making User..." : "Making Admin..."}
+                      </>
+                    ) : (
+                      <>
+                        {user.role === "admin" ? (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Make User
+                          </>
+                        ) : (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                              <path d="M2 17l10 5 10-5" />
+                              <path d="M2 12l10 5 10-5" />
+                            </svg>
+                            Make Admin
+                          </>
+                        )}
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

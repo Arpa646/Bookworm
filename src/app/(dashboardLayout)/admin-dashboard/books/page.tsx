@@ -223,7 +223,7 @@ const BooksPage = () => {
             </div>
           ) : viewMode === "grid" ? (
             /* Grid View */
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "280px" : "300px"}, 1fr))`, gap: "24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "240px" : "260px"}, 1fr))`, gap: "24px" }}>
               {filteredBooks.map((book: { _id: string; title: string; author: string; coverImage?: string; genre?: { name?: string } | string; pages?: number; isPublished?: boolean }, index: number) => (
                 <div key={book._id} className="book-card" style={{ background: "linear-gradient(145deg, rgba(20, 20, 20, 0.9) 0%, rgba(12, 12, 12, 0.95) 100%)", borderRadius: "20px", border: hoveredBook === book._id ? "1px solid rgba(220, 38, 38, 0.4)" : "1px solid rgba(255, 255, 255, 0.05)", overflow: "hidden", transition: "all 0.3s ease", transform: hoveredBook === book._id ? "translateY(-8px)" : "translateY(0)", boxShadow: hoveredBook === book._id ? "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 38, 38, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.2)", animationDelay: `${0.05 + index * 0.03}s` }} onMouseEnter={() => setHoveredBook(book._id)} onMouseLeave={() => setHoveredBook(null)}>
                   {/* Cover */}

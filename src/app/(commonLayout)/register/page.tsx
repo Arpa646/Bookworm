@@ -34,7 +34,6 @@ const Reg: React.FC = () => {
     phone: "",
     address: "",
   });
-  console.log()
 
   const [uploading, setUploading] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -195,8 +194,17 @@ const Reg: React.FC = () => {
       await signUp({ user: formData }).unwrap();
       toast.success("Account created successfully!");
       router.push("/login");
-    } catch (err: any) {
-      const error = err as SignUpError;
+    } catch (err: unknown) {
+      // Type guard to check if error has the expected shape
+      const isSignUpError = (e: unknown): e is SignUpError => {
+        return (
+          typeof e === "object" &&
+          e !== null &&
+          ("data" in e || "error" in e)
+        );
+      };
+
+      const error = isSignUpError(err) ? err : (err as SignUpError);
       let errorMsg = "Failed to register user. Please try again.";
       
       // Check for duplicate email error (MongoDB E11000)
@@ -204,13 +212,10 @@ const Reg: React.FC = () => {
       const errorMessage = 
         error.data?.message || 
         error.error || 
-        err?.data?.message || 
-        err?.data?.error ||
-        err?.error || 
         "";
       
       // Convert error to string for checking
-      const errorString = JSON.stringify(err || {}).toLowerCase();
+      const errorString = JSON.stringify(error || {}).toLowerCase();
       const messageString = errorMessage.toLowerCase();
       
       // Check if it's a duplicate email error
@@ -227,10 +232,6 @@ const Reg: React.FC = () => {
         errorMsg = error.data.message;
       } else if (error.error) {
         errorMsg = error.error;
-      } else if (err?.data?.message) {
-        errorMsg = err.data.message;
-      } else if (err?.data?.error) {
-        errorMsg = err.data.error;
       }
       
       setErrorMessage(errorMsg);

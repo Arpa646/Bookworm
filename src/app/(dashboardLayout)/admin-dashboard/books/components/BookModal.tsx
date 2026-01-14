@@ -45,6 +45,17 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
     pages: "",
   });
 
+  const [formErrors, setFormErrors] = useState({
+    title: "",
+    author: "",
+    description: "",
+    isbn: "",
+    coverImage: "",
+    publishedDate: "",
+    genre: "",
+    pages: "",
+  });
+
   // Load book data when editing
   useEffect(() => {
     if (bookData?.data && isEditMode) {
@@ -62,6 +73,17 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
       if (book.coverImage) {
         setImagePreview(book.coverImage);
       }
+      // Reset errors when loading book data
+      setFormErrors({
+        title: "",
+        author: "",
+        description: "",
+        isbn: "",
+        coverImage: "",
+        publishedDate: "",
+        genre: "",
+        pages: "",
+      });
     } else if (!isEditMode) {
       // Reset form for create mode
       setFormData({
@@ -75,6 +97,17 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
         pages: "",
       });
       setImagePreview(null);
+      // Reset errors when creating new book
+      setFormErrors({
+        title: "",
+        author: "",
+        description: "",
+        isbn: "",
+        coverImage: "",
+        publishedDate: "",
+        genre: "",
+        pages: "",
+      });
     }
   }, [bookData, isEditMode, isOpen]);
 
@@ -83,6 +116,11 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    }
 
     if (name === "coverImage") {
       if (value && (value.startsWith("http://") || value.startsWith("https://"))) {
@@ -174,9 +212,230 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
   const removeImage = () => {
     setImagePreview(null);
     setFormData((prev) => ({ ...prev, coverImage: "" }));
+    setFormErrors((prev) => ({ ...prev, coverImage: "" }));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  // Validate ISBN format (supports both ISBN-10 and ISBN-13)
+  const validateISBN = (isbn: string): boolean => {
+    if (!isbn.trim()) return true; // ISBN is optional
+    // Remove hyphens and spaces
+    const cleanISBN = isbn.replace(/[-\s]/g, "");
+    // Check if it's a valid ISBN-10 (10 digits) or ISBN-13 (13 digits starting with 978 or 979)
+    return /^(\d{10}|\d{13})$/.test(cleanISBN) || /^(978|979)\d{10}$/.test(cleanISBN);
+  };
+
+  // Validate URL format
+  const validateURL = (url: string): boolean => {
+    if (!url.trim()) return true; // URL is optional
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+    const errors = {
+      title: "",
+      author: "",
+      description: "",
+      isbn: "",
+      coverImage: "",
+      publishedDate: "",
+      genre: "",
+      pages: "",
+    };
+
+    // Title validation
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+      isValid = false;
+    } else if (formData.title.trim().length < 2) {
+      errors.title = "Title must be at least 2 characters";
+      isValid = false;
+    } else if (formData.title.trim().length > 200) {
+      errors.title = "Title must be less than 200 characters";
+      isValid = false;
+    }
+
+    // Author validation
+    if (!formData.author.trim()) {
+      errors.author = "Author is required";
+      isValid = false;
+    } else if (formData.author.trim().length < 2) {
+      errors.author = "Author name must be at least 2 characters";
+      isValid = false;
+    } else if (formData.author.trim().length > 100) {
+      errors.author = "Author name must be less than 100 characters";
+      isValid = false;
+    }
+
+    // Genre validation
+    if (!formData.genre) {
+      errors.genre = "Genre is required";
+      isValid = false;
+    }
+
+    // Description validation
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+      isValid = false;
+    } else if (formData.description.trim().length < 10) {
+      errors.description = "Description must be at least 10 characters";
+      isValid = false;
+    } else if (formData.description.trim().length > 5000) {
+      errors.description = "Description must be less than 5000 characters";
+      isValid = false;
+    }
+
+    // ISBN validation
+    if (formData.isbn.trim() && !validateISBN(formData.isbn)) {
+      errors.isbn = "Please enter a valid ISBN (10 or 13 digits)";
+      isValid = false;
+    }
+
+    // Pages validation
+    if (!formData.pages.trim()) {
+      errors.pages = "Pages is required";
+      isValid = false;
+    } else {
+      const pagesNum = parseInt(formData.pages);
+      if (isNaN(pagesNum) || pagesNum < 1) {
+        errors.pages = "Pages must be a positive number";
+        isValid = false;
+      } else if (pagesNum > 100000) {
+        errors.pages = "Pages must be less than 100,000";
+        isValid = false;
+      }
+    }
+
+    // Published date validation
+    if (formData.publishedDate) {
+      const selectedDate = new Date(formData.publishedDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Set to end of today
+      
+      if (selectedDate > today) {
+        errors.publishedDate = "Published date cannot be in the future";
+        isValid = false;
+      }
+      
+      // Check if date is too far in the past (before 1000 AD)
+      const minDate = new Date("1000-01-01");
+      if (selectedDate < minDate) {
+        errors.publishedDate = "Published date seems invalid";
+        isValid = false;
+      }
+    }
+
+    // Cover image validation
+    if (!formData.coverImage.trim()) {
+      errors.coverImage = "Cover image is required";
+      isValid = false;
+    } else if (!validateURL(formData.coverImage)) {
+      errors.coverImage = "Please enter a valid image URL (must start with http:// or https://)";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name } = e.target;
+    // Validate only the field that lost focus
+    const errors = { ...formErrors };
+    
+    if (name === "title") {
+      if (!formData.title.trim()) {
+        errors.title = "Title is required";
+      } else if (formData.title.trim().length < 2) {
+        errors.title = "Title must be at least 2 characters";
+      } else if (formData.title.trim().length > 200) {
+        errors.title = "Title must be less than 200 characters";
+      } else {
+        errors.title = "";
+      }
+    } else if (name === "author") {
+      if (!formData.author.trim()) {
+        errors.author = "Author is required";
+      } else if (formData.author.trim().length < 2) {
+        errors.author = "Author name must be at least 2 characters";
+      } else if (formData.author.trim().length > 100) {
+        errors.author = "Author name must be less than 100 characters";
+      } else {
+        errors.author = "";
+      }
+    } else if (name === "genre") {
+      if (!formData.genre) {
+        errors.genre = "Genre is required";
+      } else {
+        errors.genre = "";
+      }
+    } else if (name === "description") {
+      if (!formData.description.trim()) {
+        errors.description = "Description is required";
+      } else if (formData.description.trim().length < 10) {
+        errors.description = "Description must be at least 10 characters";
+      } else if (formData.description.trim().length > 5000) {
+        errors.description = "Description must be less than 5000 characters";
+      } else {
+        errors.description = "";
+      }
+    } else if (name === "isbn") {
+      if (formData.isbn.trim() && !validateISBN(formData.isbn)) {
+        errors.isbn = "Please enter a valid ISBN (10 or 13 digits)";
+      } else {
+        errors.isbn = "";
+      }
+    } else if (name === "pages") {
+      if (!formData.pages.trim()) {
+        errors.pages = "Pages is required";
+      } else {
+        const pagesNum = parseInt(formData.pages);
+        if (isNaN(pagesNum) || pagesNum < 1) {
+          errors.pages = "Pages must be a positive number";
+        } else if (pagesNum > 100000) {
+          errors.pages = "Pages must be less than 100,000";
+        } else {
+          errors.pages = "";
+        }
+      }
+    } else if (name === "publishedDate") {
+      if (formData.publishedDate) {
+        const selectedDate = new Date(formData.publishedDate);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        
+        if (selectedDate > today) {
+          errors.publishedDate = "Published date cannot be in the future";
+        } else {
+          const minDate = new Date("1000-01-01");
+          if (selectedDate < minDate) {
+            errors.publishedDate = "Published date seems invalid";
+          } else {
+            errors.publishedDate = "";
+          }
+        }
+      } else {
+        errors.publishedDate = "";
+      }
+    } else if (name === "coverImage") {
+      if (!formData.coverImage.trim()) {
+        errors.coverImage = "Cover image is required";
+      } else if (!validateURL(formData.coverImage)) {
+        errors.coverImage = "Please enter a valid image URL (must start with http:// or https://)";
+      } else {
+        errors.coverImage = "";
+      }
+    }
+    
+    setFormErrors(errors);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -184,6 +443,12 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
 
     if (uploading) {
       toast.error("Please wait for image upload to complete");
+      return;
+    }
+
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
@@ -202,6 +467,18 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
         toast.success("Book created successfully!");
       }
 
+      // Reset form errors on success
+      setFormErrors({
+        title: "",
+        author: "",
+        description: "",
+        isbn: "",
+        coverImage: "",
+        publishedDate: "",
+        genre: "",
+        pages: "",
+      });
+
       onClose();
       if (onSuccess) {
         onSuccess();
@@ -217,6 +494,16 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
   const handleClose = () => {
     if (!isLoading && !uploading) {
       setFormData({
+        title: "",
+        author: "",
+        description: "",
+        isbn: "",
+        coverImage: "",
+        publishedDate: "",
+        genre: "",
+        pages: "",
+      });
+      setFormErrors({
         title: "",
         author: "",
         description: "",
@@ -393,12 +680,20 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      required
+                      onBlur={handleBlur}
+                      
                       placeholder="Enter book title"
-                      style={inputStyle}
+                      style={{
+                        ...inputStyle,
+                        borderColor: formErrors.title ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     />
+                    {formErrors.title && (
+                      <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                        {formErrors.title}
+                      </p>
+                    )}
                   </div>
 
                   {/* Author */}
@@ -409,12 +704,20 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       name="author"
                       value={formData.author}
                       onChange={handleChange}
-                      required
+                      onBlur={handleBlur}
+                      
                       placeholder="Enter author name"
-                      style={inputStyle}
+                      style={{
+                        ...inputStyle,
+                        borderColor: formErrors.author ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     />
+                    {formErrors.author && (
+                      <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                        {formErrors.author}
+                      </p>
+                    )}
                   </div>
 
                   {/* Genre */}
@@ -424,16 +727,29 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       name="genre"
                       value={formData.genre}
                       onChange={handleChange}
-                      required
-                      style={{ ...inputStyle, cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 16px center" }}
+                      onBlur={handleBlur}
+                      
+                      style={{
+                        ...inputStyle,
+                        cursor: "pointer",
+                        appearance: "none",
+                        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 16px center",
+                        borderColor: formErrors.genre ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     >
                       <option value="">Select a genre</option>
                       {genres.map((genre: { _id: string; name: string }) => (
                         <option key={genre._id} value={genre._id}>{genre.name}</option>
                       ))}
                     </select>
+                    {formErrors.genre && (
+                      <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                        {formErrors.genre}
+                      </p>
+                    )}
                   </div>
 
                   {/* Description */}
@@ -443,13 +759,23 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      required
+                      onBlur={handleBlur}
+                      
                       rows={5}
                       placeholder="Enter book description..."
-                      style={{ ...inputStyle, resize: "vertical", minHeight: "140px" }}
+                      style={{
+                        ...inputStyle,
+                        resize: "vertical",
+                        minHeight: "140px",
+                        borderColor: formErrors.description ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     />
+                    {formErrors.description && (
+                      <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                        {formErrors.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* ISBN & Pages */}
@@ -461,25 +787,42 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                         name="isbn"
                         value={formData.isbn}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g., 978-3-16-148410-0"
-                        style={inputStyle}
+                        style={{
+                          ...inputStyle,
+                          borderColor: formErrors.isbn ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                        }}
                         onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                        onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                       />
+                      {formErrors.isbn && (
+                        <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                          {formErrors.isbn}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label style={labelStyle}>Pages</label>
+                      <label style={labelStyle}>Pages <span style={{ color: "#ef4444" }}>*</span></label>
                       <input
                         type="number"
                         name="pages"
                         value={formData.pages}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        required
                         placeholder="e.g., 320"
-                        min="0"
-                        style={inputStyle}
+                        min="1"
+                        style={{
+                          ...inputStyle,
+                          borderColor: formErrors.pages ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                        }}
                         onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                        onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                       />
+                      {formErrors.pages && (
+                        <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                          {formErrors.pages}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -491,16 +834,25 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       name="publishedDate"
                       value={formData.publishedDate}
                       onChange={handleChange}
-                      style={{ ...inputStyle, cursor: "pointer" }}
+                      onBlur={handleBlur}
+                      style={{
+                        ...inputStyle,
+                        cursor: "pointer",
+                        borderColor: formErrors.publishedDate ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                      }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     />
+                    {formErrors.publishedDate && (
+                      <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                        {formErrors.publishedDate}
+                      </p>
+                    )}
                   </div>
 
                   {/* Cover Image Upload */}
                   <div>
                     <label style={labelStyle}>
-                      Cover Image <span style={{ color: "rgba(255, 255, 255, 0.25)" }}>(Optional)</span>
+                      Cover Image <span style={{ color: "#ef4444" }}>*</span>
                     </label>
                     
                     <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -602,11 +954,21 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                         name="coverImage"
                         value={formData.coverImage}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="https://example.com/image.jpg"
-                        style={{ ...inputStyle, padding: "10px 14px", fontSize: "13px" }}
+                        style={{
+                          ...inputStyle,
+                          padding: "10px 14px",
+                          fontSize: "13px",
+                          borderColor: formErrors.coverImage ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.1)",
+                        }}
                         onFocus={(e) => e.currentTarget.style.borderColor = "rgba(220, 38, 38, 0.5)"}
-                        onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                       />
+                      {formErrors.coverImage && (
+                        <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginBottom: 0 }}>
+                          {formErrors.coverImage}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

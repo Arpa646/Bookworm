@@ -41,7 +41,7 @@ const BookDetailsPage = () => {
   const shelfId = currentShelf?._id;
 
   const [reviewForm, setReviewForm] = useState({
-    rating: 5,
+    rating: 0,
     comment: "",
   });
   const [progressForm, setProgressForm] = useState({
@@ -75,7 +75,7 @@ const BookDetailsPage = () => {
       }).unwrap();
 
       toast.success("Review submitted! It will be visible after approval.");
-      setReviewForm({ rating: 5, comment: "" });
+      setReviewForm({ rating: 0, comment: "" });
       refetchReviews();
     } catch (error) {
       const apiError = error as ApiError;

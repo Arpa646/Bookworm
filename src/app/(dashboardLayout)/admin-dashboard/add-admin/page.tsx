@@ -7,6 +7,14 @@ import Link from "next/link"; // Correct import for Link
 import { useSignUpMutation } from "@/GlobalRedux/api/api"; // Import your mutation hook
 
 const AddAdmin: React.FC = () => {
+  interface SignUpError {
+    data?: {
+      message?: string;
+      error?: string;
+    };
+    error?: string;
+  }
+
   // Form state management
   const [formData, setFormData] = useState({
     name: "",
@@ -31,17 +39,18 @@ const AddAdmin: React.FC = () => {
     try {
       await signUp({ user: formData }).unwrap(); // Send form data to backend
       alert("User registered successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as SignUpError;
       console.error("Failed to register user:", err);
       // Check for duplicate email error (MongoDB E11000)
       const errorMessage = 
-        err?.data?.message || 
-        err?.data?.error ||
-        err?.error || 
+        error.data?.message || 
+        error.data?.error ||
+        error.error || 
         "";
       
       // Convert error to string for checking
-      const errorString = JSON.stringify(err || {}).toLowerCase();
+      const errorString = JSON.stringify(error || {}).toLowerCase();
       const messageString = errorMessage.toLowerCase();
       
       // Check if it's a duplicate email error
