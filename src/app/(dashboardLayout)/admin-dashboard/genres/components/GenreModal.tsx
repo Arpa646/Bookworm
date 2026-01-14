@@ -69,8 +69,11 @@ const GenreModal = ({ isOpen, onClose, genreId = null, onSuccess }: GenreModalPr
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || `Failed to ${isEditMode ? "update" : "create"} genre`);
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : `Failed to ${isEditMode ? "update" : "create"} genre`;
+      toast.error(errorMessage);
     }
   };
 

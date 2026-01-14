@@ -22,9 +22,9 @@ export const NavbarWrapper = ({ children }: Props) => {
       >
         <NavbarContent className="md:hidden">
           {collapsed ? (
-            <ChevronLeft onClick={setCollapsed}></ChevronLeft>
+            <ChevronLeft onClick={() => setCollapsed(!collapsed)}></ChevronLeft>
           ) : (
-            <Menu onClick={setCollapsed}></Menu>
+            <Menu onClick={() => setCollapsed(!collapsed)}></Menu>
           )}
         </NavbarContent>
         <NavbarContent className="w-full max-md:hidden">

@@ -36,8 +36,11 @@ const UsersPage = () => {
       await changeUserRole({ id: userId, role: newRole }).unwrap();
       toast.success(`User role changed to ${newRole} successfully`);
       refetch();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to change user role");
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : "Failed to change user role";
+      toast.error(errorMessage);
     } finally {
       setChangingUserId(null);
     }

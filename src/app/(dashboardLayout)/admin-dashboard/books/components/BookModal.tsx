@@ -206,8 +206,11 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || `Failed to ${isEditMode ? "update" : "create"} book`);
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : `Failed to ${isEditMode ? "update" : "create"} book`;
+      toast.error(errorMessage);
     }
   };
 
@@ -427,7 +430,7 @@ const BookModal = ({ isOpen, onClose, bookId = null, onSuccess }: BookModalProps
                       onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
                     >
                       <option value="">Select a genre</option>
-                      {genres.map((genre: any) => (
+                      {genres.map((genre: { _id: string; name: string }) => (
                         <option key={genre._id} value={genre._id}>{genre.name}</option>
                       ))}
                     </select>

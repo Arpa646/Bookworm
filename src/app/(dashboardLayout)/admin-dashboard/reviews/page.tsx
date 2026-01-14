@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { useGetPendingReviewsQuery, useApproveReviewMutation, useDeleteReviewMutation } from "@/GlobalRedux/api/api";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Review } from "@/types";
 
 const ReviewsPage = () => {
   const { data: reviewsData, isLoading, refetch } = useGetPendingReviewsQuery({});
-  const [approveReview, { isLoading: isApproving }] = useApproveReviewMutation();
+  const [approveReview] = useApproveReviewMutation();
   const [deleteReview, { isLoading: isDeleting }] = useDeleteReviewMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<{ id: string; bookTitle: string } | null>(null);
@@ -22,7 +23,7 @@ const ReviewsPage = () => {
   }, []);
 
   const reviews = reviewsData?.data || [];
-  const pendingReviews = reviews.filter((review: any) => review.status === "pending" && !review.isDeleted);
+  const pendingReviews = reviews.filter((review: Review) => review.status === "pending" && !review.isDeleted);
 
   const handleApprove = async (reviewId: string) => {
     setApprovingId(reviewId);
@@ -30,7 +31,7 @@ const ReviewsPage = () => {
       await approveReview(reviewId).unwrap();
       toast.success("Review approved successfully");
       refetch();
-    } catch (error) {
+    } catch {
       toast.error("Failed to approve review");
     } finally {
       setApprovingId(null);
@@ -45,7 +46,7 @@ const ReviewsPage = () => {
         setDeleteDialogOpen(false);
         setReviewToDelete(null);
         refetch();
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete review");
       }
     }
@@ -94,7 +95,7 @@ const ReviewsPage = () => {
             </div>
             <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 600, color: "#ffffff", textAlign: "center", marginBottom: "12px" }}>Delete Review</h3>
             <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "15px", textAlign: "center", marginBottom: "8px", lineHeight: "1.6" }}>Delete review for</p>
-            <p style={{ color: "#ef4444", fontSize: "16px", textAlign: "center", marginBottom: "24px", fontWeight: 500 }}>"{reviewToDelete?.bookTitle}"?</p>
+            <p style={{ color: "#ef4444", fontSize: "16px", textAlign: "center", marginBottom: "24px", fontWeight: 500 }}>&quot;{reviewToDelete?.bookTitle}&quot;?</p>
             <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px", textAlign: "center", marginBottom: "28px" }}>This action cannot be undone.</p>
             <div style={{ display: "flex", gap: "12px" }}>
               <button onClick={() => setDeleteDialogOpen(false)} style={{ flex: 1, padding: "14px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "12px", color: "rgba(255, 255, 255, 0.7)", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.3s ease" }}
@@ -166,7 +167,7 @@ const ReviewsPage = () => {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {pendingReviews.map((review: any, index: number) => {
+            {pendingReviews.map((review: Review, index: number) => {
               const bookTitle = review.bookId && typeof review.bookId === "object" ? review.bookId.title : "Unknown Book";
               const bookCover = review.bookId && typeof review.bookId === "object" ? review.bookId.coverImage : null;
               const userName = review.userId && typeof review.userId === "object" ? review.userId.name || review.userId.email : review.userId || "Anonymous";

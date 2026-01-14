@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { useGetAllTutorialsQuery, useDeleteTutorialMutation } from "@/GlobalRedux/api/api";
 import { toast } from "sonner";
 import TutorialModal from "./components/TutorialModal";
+import Image from "next/image";
+
+interface Tutorial {
+  _id: string;
+  title: string;
+  youtubeUrl: string;
+  category: string;
+}
 
 const categories = ["All", "Recommendation", "Getting Started", "Discovery", "Reviews", "Goals", "Tips", "Community"];
 
@@ -30,7 +38,7 @@ const TutorialPage = () => {
 
   const filteredVideos = selectedCategory === "All" 
     ? tutorials 
-    : tutorials.filter((tutorial: any) => tutorial.category === selectedCategory);
+    : tutorials.filter((tutorial: Tutorial) => tutorial.category === selectedCategory);
 
   const handleDelete = async () => {
     if (tutorialToDelete) {
@@ -40,7 +48,7 @@ const TutorialPage = () => {
         setDeleteDialogOpen(false);
         setTutorialToDelete(null);
         refetch();
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete tutorial");
       }
     }
@@ -130,7 +138,7 @@ const TutorialPage = () => {
               Are you sure you want to delete
             </p>
             <p style={{ color: "#ef4444", fontSize: "16px", textAlign: "center", marginBottom: "24px", fontWeight: 500 }}>
-              "{tutorialToDelete?.title}"?
+              &quot;{tutorialToDelete?.title}&quot;?
             </p>
             <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px", textAlign: "center", marginBottom: "28px" }}>
               This action cannot be undone.
@@ -181,7 +189,7 @@ const TutorialPage = () => {
           >
             <div style={{ position: "relative", paddingTop: "56.25%" }}>
               {(() => {
-                const tutorial = tutorials.find((t: any) => t._id === playingVideo);
+                const tutorial = tutorials.find((t: Tutorial) => t._id === playingVideo);
                 return tutorial ? (
                   <iframe
                     src={tutorial.youtubeUrl}
@@ -197,7 +205,7 @@ const TutorialPage = () => {
               <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: "16px" }}>
                 <div>
                   {(() => {
-                    const tutorial = tutorials.find((t: any) => t._id === playingVideo);
+                    const tutorial = tutorials.find((t: Tutorial) => t._id === playingVideo);
                     return tutorial ? (
                       <>
                         <span style={{ display: "inline-block", padding: "4px 12px", background: "rgba(220, 38, 38, 0.15)", borderRadius: "20px", color: "#ef4444", fontSize: "11px", fontWeight: 500, marginBottom: "12px" }}>
@@ -324,7 +332,7 @@ const TutorialPage = () => {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: "24px" }}>
-            {filteredVideos.map((tutorial: any, index: number) => {
+            {filteredVideos.map((tutorial: Tutorial, index: number) => {
               const videoId = getVideoId(tutorial.youtubeUrl);
               return (
                 <div
@@ -346,13 +354,12 @@ const TutorialPage = () => {
                   {/* Thumbnail */}
                   <div style={{ position: "relative", paddingTop: "56.25%", background: "linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(10, 10, 10, 1) 100%)", cursor: "pointer" }} onClick={() => setPlayingVideo(tutorial._id)}>
                     {videoId ? (
-                      <img
+                      <Image
                         src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                         alt={tutorial.title}
-                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", transform: hoveredVideo === tutorial._id ? "scale(1.1)" : "scale(1)" }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                        }}
+                        fill
+                        style={{ objectFit: "cover", transition: "transform 0.5s ease", transform: hoveredVideo === tutorial._id ? "scale(1.1)" : "scale(1)" }}
+                        unoptimized
                       />
                     ) : null}
                     

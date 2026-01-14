@@ -14,14 +14,14 @@ export async function middleware(request: NextRequest) {
     // If user is already logged in, redirect based on role
     if (accessToken) {
       try {
-        const decodedToken = decode(accessToken) as any;
+        const decodedToken = decode(accessToken) as { role?: string };
         const role = decodedToken?.role;
         if (role === "admin") {
           return NextResponse.redirect(new URL("/admin-dashboard", request.url));
         } else if (role === "user") {
           return NextResponse.redirect(new URL("/dashboard/my-library", request.url));
         }
-      } catch (error) {
+      } catch {
         // Invalid token, allow access to auth pages
         return NextResponse.next();
       }
@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
   // Role-based authorization
   try {
-    const decodedToken = decode(accessToken) as any;
+    const decodedToken = decode(accessToken) as { role?: string };
     const role = decodedToken?.role;
 
     // Admin routes
@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
 
     // Allow access to other protected routes
     return NextResponse.next();
-  } catch (error) {
+  } catch {
     // Invalid token, redirect to login
     return NextResponse.redirect(new URL("/login", request.url));
   }

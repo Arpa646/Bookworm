@@ -9,6 +9,12 @@ import { useCurrentUser, logout } from "@/GlobalRedux/Features/auth/authSlice";
 import { destroyCookie } from "nookies";
 import { toast } from "sonner";
 
+interface AuthUser {
+  name?: string;
+  email?: string;
+  profileImage?: string;
+}
+
 export const AdminSidebarWrapper = () => {
   const pathname = usePathname();
   const dispatch = useDispatch();
@@ -363,9 +369,9 @@ export const AdminSidebarWrapper = () => {
                   flexShrink: 0,
                 }}
               >
-                {(user as any)?.profileImage ? (
+                {(user as AuthUser)?.profileImage ? (
                   <Image
-                    src={(user as any).profileImage}
+                    src={(user as AuthUser).profileImage!}
                     alt="Profile"
                     fill
                     style={{ objectFit: "cover" }}
@@ -384,7 +390,7 @@ export const AdminSidebarWrapper = () => {
                       fontWeight: 600,
                     }}
                   >
-                    {((user as any)?.name?.[0] || (user as any)?.email?.[0] || "A").toUpperCase()}
+                    {((user as AuthUser)?.name?.[0] || (user as AuthUser)?.email?.[0] || "A").toUpperCase()}
                   </div>
                 )}
                 {/* Online indicator */}
@@ -415,7 +421,7 @@ export const AdminSidebarWrapper = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {(user as any)?.name || "Admin User"}
+                  {(user as AuthUser)?.name || "Admin User"}
                 </p>
                 <p
                   style={{
@@ -427,7 +433,7 @@ export const AdminSidebarWrapper = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {(user as any)?.email || "admin@bookworm.com"}
+                  {(user as AuthUser)?.email || "admin@bookworm.com"}
                 </p>
               </div>
 

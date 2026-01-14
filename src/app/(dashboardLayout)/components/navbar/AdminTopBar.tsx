@@ -8,6 +8,12 @@ import { destroyCookie } from "nookies";
 import { toast } from "sonner";
 import { useSidebarContext } from "../../layout/layout-context";
 
+interface AuthUser {
+  name?: string;
+  email?: string;
+  profileImage?: string;
+}
+
 export const AdminTopBar = () => {
   const dispatch = useDispatch();
   const user = useSelector(useCurrentUser);
@@ -65,7 +71,7 @@ export const AdminTopBar = () => {
               <div className="flex items-center gap-2 text-sm text-gray-300">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">
-                  {(user as any)?.name || (user as any)?.email || "Admin"}
+                  {(user as AuthUser)?.name || (user as AuthUser)?.email || "Admin"}
                 </span>
               </div>
             )}

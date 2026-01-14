@@ -10,6 +10,12 @@ import { destroyCookie } from "nookies";
 import { toast } from "sonner";
 import { BookFooter } from "../footer/BookFooter";
 
+interface AuthUser {
+  name?: string;
+  email?: string;
+  profileImage?: string;
+}
+
 interface Props {
   children: React.ReactNode;
   isAdmin?: boolean;
@@ -320,8 +326,8 @@ export const BookNavbar = ({ children, isAdmin = false }: Props) => {
                       flexShrink: 0,
                     }}
                   >
-                    {(user as any)?.profileImage ? (
-                      <Image src={(user as any).profileImage} alt="Profile" width={34} height={34} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+                    {(user as AuthUser)?.profileImage ? (
+                      <Image src={(user as AuthUser).profileImage!} alt="Profile" width={34} height={34} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
                     ) : (
                       <div
                         style={{
@@ -336,13 +342,13 @@ export const BookNavbar = ({ children, isAdmin = false }: Props) => {
                           fontWeight: 600,
                         }}
                       >
-                        {((user as any)?.name?.[0] || (user as any)?.email?.[0] || "U").toUpperCase()}
+                        {((user as AuthUser)?.name?.[0] || (user as AuthUser)?.email?.[0] || "U").toUpperCase()}
                       </div>
                     )}
                   </div>
                   {!isMobile && (
                     <p style={{ fontSize: "13px", fontWeight: 500, color: "#ffffff", margin: 0, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>
-                      {(user as any)?.name || "User"}
+                      {(user as AuthUser)?.name || "User"}
                     </p>
                   )}
                   <svg
@@ -378,10 +384,10 @@ export const BookNavbar = ({ children, isAdmin = false }: Props) => {
                     {/* User Info */}
                     <div style={{ padding: "16px", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
                       <p style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: "0 0 4px 0" }}>
-                        {(user as any)?.name || "User"}
+                        {(user as AuthUser)?.name || "User"}
                       </p>
                       <p style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.4)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {(user as any)?.email || "user@example.com"}
+                        {(user as AuthUser)?.email || "user@example.com"}
                       </p>
                     </div>
 

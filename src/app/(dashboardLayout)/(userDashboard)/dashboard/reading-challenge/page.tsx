@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/ui/card";
 import { Button } from "@/app/ui/button";
 import { Input } from "@/app/ui/input";
 import { Label } from "@/app/ui/label";
-import { Target, TrendingUp, Calendar, Award, Star, BookOpen } from "lucide-react";
+import { Target, TrendingUp, Calendar, Star, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import {
   PieChart,
@@ -49,8 +49,11 @@ const ReadingChallengePage = () => {
       }).unwrap();
       toast.success("Reading goal updated!");
       refetchChallenge();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update goal");
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : "Failed to update goal";
+      toast.error(errorMessage);
     }
   };
 
@@ -233,12 +236,12 @@ const ReadingChallengePage = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
                 >
-                  {genreBreakdown.map((entry, index) => (
+                  {genreBreakdown.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

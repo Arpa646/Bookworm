@@ -4,6 +4,9 @@ export interface User {
     name: string;
     email: string;
     password: string;
+    profileImage?: string;
+    followers?: string[];
+    following?: string[];
     createdAt: Date;
     updatedAt: Date;
   }
@@ -41,6 +44,7 @@ export interface User {
     comment: string;
     status: string;
     createdAt?: string;
+    isDeleted?: boolean;
   }
 
   export interface Shelf {

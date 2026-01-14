@@ -67,8 +67,11 @@ const EditBookPage = () => {
       await updateBook({ id: bookId, ...bookData }).unwrap();
       toast.success("Book updated successfully!");
       router.push("/admin-dashboard/books");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update book");
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : "Failed to update book";
+      toast.error(errorMessage);
     }
   };
 
@@ -130,7 +133,7 @@ const EditBookPage = () => {
                 className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="">Select a genre</option>
-                {genres.map((genre: any) => (
+                {genres.map((genre: { _id: string; name: string }) => (
                   <option key={genre._id} value={genre._id}>
                     {genre.name}
                   </option>

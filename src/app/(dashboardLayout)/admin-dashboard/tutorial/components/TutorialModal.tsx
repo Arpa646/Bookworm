@@ -3,6 +3,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useCreateTutorialMutation, useUpdateTutorialMutation, useGetSingleTutorialQuery } from "@/GlobalRedux/api/api";
 import { toast } from "sonner";
+import { ApiError } from "@/types";
 
 interface TutorialModalProps {
   isOpen: boolean;
@@ -129,8 +130,9 @@ const TutorialModal = ({ isOpen, onClose, tutorialId = null, onSuccess }: Tutori
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || `Failed to ${isEditMode ? "update" : "create"} tutorial`);
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError?.data?.message || `Failed to ${isEditMode ? "update" : "create"} tutorial`);
     }
   };
 

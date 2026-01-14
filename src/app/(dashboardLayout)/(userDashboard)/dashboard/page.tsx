@@ -15,7 +15,7 @@ import { User, Shelf, Book } from "@/types";
 
 const UserDashboardPage = () => {
   const user = useSelector(useCurrentUser) as User | null;
-  const userId = user?._id || user?.id;
+  const userId = user?._id;
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
 
   const { data: allBooksData, isLoading: isLoadingBooks } = useGetAllBooksQuery({});
@@ -625,7 +625,7 @@ const UserDashboardPage = () => {
 
                         {/* Genre and Pages */}
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          {book?.genre?.name && (
+                          {book?.genre && (
                             <span
                               style={{
                                 display: "inline-block",
@@ -639,7 +639,7 @@ const UserDashboardPage = () => {
                                 letterSpacing: "0.5px",
                               }}
                             >
-                              {typeof book.genre === "object" ? book.genre.name : book.genre}
+                              {typeof book.genre === "object" && book.genre !== null ? book.genre.name : book.genre}
                             </span>
                           )}
                           {book?.pages && (

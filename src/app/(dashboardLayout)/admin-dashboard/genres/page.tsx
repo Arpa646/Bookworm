@@ -32,7 +32,7 @@ const GenresPage = () => {
         setDeleteDialogOpen(false);
         setGenreToDelete(null);
         refetch();
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete genre");
       }
     }
@@ -99,7 +99,7 @@ const GenresPage = () => {
             </div>
             <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 600, color: "#ffffff", textAlign: "center", marginBottom: "12px" }}>Delete Genre</h3>
             <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "15px", textAlign: "center", marginBottom: "8px", lineHeight: "1.6" }}>Are you sure you want to delete</p>
-            <p style={{ color: "#ef4444", fontSize: "16px", textAlign: "center", marginBottom: "16px", fontWeight: 500 }}>"{genreToDelete?.name}"?</p>
+            <p style={{ color: "#ef4444", fontSize: "16px", textAlign: "center", marginBottom: "16px", fontWeight: 500 }}>&quot;{genreToDelete?.name}&quot;?</p>
             <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px", textAlign: "center", marginBottom: "28px", padding: "12px", background: "rgba(220, 38, 38, 0.1)", borderRadius: "10px", border: "1px solid rgba(220, 38, 38, 0.2)" }}>
               ⚠️ Books using this genre may be affected
             </p>
@@ -165,7 +165,7 @@ const GenresPage = () => {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "280px" : "320px"}, 1fr))`, gap: "20px" }}>
-            {genres.map((genre: any, index: number) => (
+            {genres.map((genre: { _id: string; name: string; description?: string; booksCount?: number }, index: number) => (
               <div
                 key={genre._id}
                 className="genre-card"

@@ -45,8 +45,11 @@ const EditGenrePage = () => {
       await updateGenre({ id: genreId, ...formData }).unwrap();
       toast.success("Genre updated successfully!");
       router.push("/admin-dashboard/genres");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update genre");
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+        ? String(error.data.message)
+        : "Failed to update genre";
+      toast.error(errorMessage);
     }
   };
 

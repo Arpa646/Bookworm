@@ -8,12 +8,19 @@ import {
   useUnfollowRequestMutation,
 } from "@/GlobalRedux/api/api";
 import { useUser } from "@/services";
+import { User } from "@/types";
 
-const UserProfilePage = ({ params }) => {
+interface UserProfilePageProps {
+  params: {
+    userId: string;
+  };
+}
+
+const UserProfilePage = ({ params }: UserProfilePageProps) => {
   const userId = params.userId;
   const { userId: currentUserId } = useUser();
   const { data: userData, isLoading: userLoading } = useGetSingleUserQuery(userId);
-  const { data: allUsersData } = useGetAllUserQuery();
+  const { data: allUsersData } = useGetAllUserQuery({});
 
   const profileUser = userData?.data; // User profile data
   const allUsers = allUsersData?.data; // All users in the database
@@ -138,7 +145,7 @@ const UserProfilePage = ({ params }) => {
       <div className="col-span-1 bg-gray-100 p-4 rounded-lg shadow-md">
         <h3 className="text-lg font-semibold">All Users</h3>
         <div className="grid grid-cols-1 gap-2 mt-4">
-          {allUsers?.map((user) => (
+          {allUsers?.map((user: User) => (
             <div
               key={user._id}
               className="bg-gray-200 p-2 flex items-center justify-between rounded-lg shadow-md"

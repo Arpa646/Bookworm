@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useGetAllBooksQuery, useGetAllGenresQuery, useGetAllUserQuery, useGetPendingReviewsQuery } from "@/GlobalRedux/api/api";
 import Link from "next/link";
+import { Review, Book } from "@/types";
 
 const AdminDashboardPage = () => {
   const { data: booksData, isLoading: booksLoading } = useGetAllBooksQuery({});
@@ -30,15 +31,19 @@ const AdminDashboardPage = () => {
   const totalBooks = books.length;
   const totalGenres = genres.length;
   const totalUsers = users.length;
-  const pendingReviews = reviews.filter((review: any) => review.status === "pending" && !review.isDeleted).length;
+  const pendingReviews = reviews.filter((review: Review) => review.status === "pending" && !review.isDeleted).length;
 
   // Books per genre
-  const genreCounts = genres.map((genre: any) => ({
+  interface GenreCount {
+    name: string;
+    count: number;
+  }
+  const genreCounts = genres.map((genre: { _id: string; name: string }) => ({
     name: genre.name,
-    count: books.filter((book: any) => book.genre === genre._id || book.genre?._id === genre._id).length,
-  })).sort((a: any, b: any) => b.count - a.count);
+    count: books.filter((book: Book) => book.genre === genre._id || (typeof book.genre === "object" && book.genre?._id === genre._id)).length,
+  })).sort((a: GenreCount, b: GenreCount) => b.count - a.count);
 
-  const maxGenreCount = Math.max(...genreCounts.map((g: any) => g.count), 1);
+  const maxGenreCount = Math.max(...genreCounts.map((g: GenreCount) => g.count), 1);
 
   // Monthly books (mock data)
   const monthlyBooks = [
@@ -221,7 +226,7 @@ const AdminDashboardPage = () => {
               {genreCounts.length === 0 ? (
                 <p style={{ color: "rgba(255, 255, 255, 0.4)", textAlign: "center", padding: "40px 0" }}>No genre data available</p>
               ) : (
-                genreCounts.slice(0, 6).map((genre: any, index: number) => (
+                genreCounts.slice(0, 6).map((genre: GenreCount, index: number) => (
                   <div
                     key={genre.name}
                     onMouseEnter={() => setHoveredGenre(index)}

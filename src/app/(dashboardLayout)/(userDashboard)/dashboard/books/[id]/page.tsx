@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { useSelector } from "react-redux";
 import { useCurrentUser } from "@/GlobalRedux/Features/auth/authSlice";
-import { User, Review, Shelf } from "@/types";
+import { User, Review, Shelf, ApiError } from "@/types";
 
 const BookDetailsPage = () => {
   const params = useParams();

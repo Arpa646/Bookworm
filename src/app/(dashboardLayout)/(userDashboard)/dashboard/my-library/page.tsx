@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useGetMyLibraryQuery } from "@/GlobalRedux/api/api";
 import Image from "next/image";
 import Link from "next/link";
-import { Shelf } from "@/types";
+import { Shelf, Book } from "@/types";
 
 const MyLibraryPage = () => {
   const { data: libraryData, isLoading } = useGetMyLibraryQuery({});
@@ -223,9 +223,14 @@ const MyLibraryPage = () => {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "160px" : "200px"}, 1fr))`, gap: "24px" }}>
             {shelfBooks.map((shelf: Shelf, index: number) => {
-              const book = shelf.bookId || shelf.book || shelf;
-              const bookId = typeof book === "object" ? (book._id || book.id) : book;
-              const bookData = typeof book === "object" ? book : null;
+              // Extract book from shelf - prioritize shelf.book, then check if bookId is a Book object
+              const book = shelf.book || (typeof shelf.bookId === "object" ? shelf.bookId : null);
+              const bookId = typeof shelf.bookId === "string" 
+                ? shelf.bookId 
+                : (book?._id || (typeof shelf.bookId === "object" ? shelf.bookId._id : null));
+              
+              // Type guard: check if book is actually a Book (has title property)
+              const bookData: Book | null = book && "title" in book ? book : null;
 
               if (!bookId) return null;
 
