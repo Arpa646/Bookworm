@@ -400,6 +400,44 @@ export const baseApi = createApi({
         method: "GET",
       }),
     }),
+
+    // Tutorials Endpoints
+    getAllTutorials: builder.query({
+      query: () => ({
+        url: "/tutorials",
+        method: "GET",
+      }),
+    }),
+
+    getSingleTutorial: builder.query({
+      query: (id) => ({
+        url: `/tutorials/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    createTutorial: builder.mutation({
+      query: (tutorialData) => ({
+        url: "/tutorials",
+        method: "POST",
+        body: tutorialData,
+      }),
+    }),
+
+    updateTutorial: builder.mutation({
+      query: ({ id, ...tutorialData }) => ({
+        url: `/tutorials/${id}`,
+        method: "PUT",
+        body: tutorialData,
+      }),
+    }),
+
+    deleteTutorial: builder.mutation({
+      query: (id) => ({
+        url: `/tutorials/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -461,4 +499,11 @@ export const {
   useGetReadingChallengeQuery,
   useUpdateReadingChallengeMutation,
   useGetReadingStatsQuery,
+
+  // Tutorials
+  useGetAllTutorialsQuery,
+  useGetSingleTutorialQuery,
+  useCreateTutorialMutation,
+  useUpdateTutorialMutation,
+  useDeleteTutorialMutation,
 } = baseApi;
