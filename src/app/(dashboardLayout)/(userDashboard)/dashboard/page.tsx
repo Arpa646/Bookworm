@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   useGetAllBooksQuery,
-  useGetReadingStatsQuery,
+ 
   useGetMyLibraryQuery,
   useGetRecommendationsQuery,
 } from "@/GlobalRedux/api/api";
@@ -19,17 +19,17 @@ const UserDashboardPage = () => {
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
 
   const { data: allBooksData, isLoading: isLoadingBooks } = useGetAllBooksQuery({});
-  const { data: statsData } = useGetReadingStatsQuery({});
+ 
   const { data: libraryData } = useGetMyLibraryQuery(userId || "", {
     skip: !userId,
   });
   const { data: recommendationsData, isLoading: isLoadingRecs } = useGetRecommendationsQuery({});
 
   const allBooks = useMemo(() => allBooksData?.data || [], [allBooksData?.data]);
-  const stats = statsData?.data || {};
+  
   const shelves = libraryData?.data || [];
   const readBooks = shelves.filter((shelf: Shelf) => shelf.status === "read") || [];
-
+console.log("readBooks", readBooks);
   const recommendations = useMemo(() => {
     if (recommendationsData?.data?.recommendations && recommendationsData?.data?.recommendations.length > 0) {
       return recommendationsData.data.recommendations;
@@ -44,52 +44,7 @@ const UserDashboardPage = () => {
   console.log("displayBooks", displayBooks);
   const isLoading = isLoadingBooks || isLoadingRecs;
 
-  const statsCards = [
-    {
-      title: "Books Read",
-      value: stats.booksReadThisYear || 0,
-      subtitle: "This year",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
-      ),
-    },
-    {
-      title: "Total Pages",
-      value: stats.totalPagesRead || 0,
-      subtitle: "Pages read",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-          <polyline points="17 6 23 6 23 12" />
-        </svg>
-      ),
-    },
-    {
-      title: "Avg Rating",
-      value: stats.averageRating ? stats.averageRating.toFixed(1) : "0.0",
-      subtitle: "Your average",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ),
-    },
-    {
-      title: "Reading Streak",
-      value: stats.readingStreak || 0,
-      subtitle: "Days in a row",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="12" r="6" />
-          <circle cx="12" cy="12" r="2" />
-        </svg>
-      ),
-    },
-  ];
+ 
 
   if (isLoading) {
     return (
@@ -274,86 +229,7 @@ const UserDashboardPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "20px",
-            marginBottom: "40px",
-          }}
-        >
-          {statsCards.map((stat) => (
-            <div
-              key={stat.title}
-              className="stat-card"
-              style={{
-                background: "linear-gradient(145deg, rgba(25, 25, 25, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%)",
-                borderRadius: "20px",
-                padding: "24px",
-                border: "1px solid rgba(220, 38, 38, 0.2)",
-                position: "relative",
-                overflow: "hidden",
-                opacity: 0,
-              }}
-            >
-              {/* Decorative gradient */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  width: "100px",
-                  height: "100px",
-                  background: "radial-gradient(circle, rgba(220, 38, 38, 0.15) 0%, transparent 70%)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    color: "rgba(255, 255, 255, 0.5)",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                  }}
-                >
-                  {stat.title}
-                </span>
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    background: "rgba(220, 38, 38, 0.15)",
-                    borderRadius: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#ef4444",
-                  }}
-                >
-                  {stat.icon}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "36px",
-                  fontWeight: 700,
-                  color: "#ef4444",
-                  marginBottom: "4px",
-                }}
-              >
-                {stat.value}
-              </div>
-              <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px", margin: 0 }}>
-                {stat.subtitle}
-              </p>
-            </div>
-          ))}
-        </div>
+       
 
         {/* Recommended/Popular Books Section */}
         <div
@@ -392,14 +268,12 @@ const UserDashboardPage = () => {
                   margin: 0,
                 }}
               >
-                {recommendationsData?.data?.recommendations?.length > 0 ? "Recommended for You" : "Popular Books"}
+                {readBooks.length < 3 
+                  ? "Recommended for You"
+                  : "Recommended for You"}
               </h2>
             </div>
-            <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "14px", marginLeft: "48px" }}>
-              {recommendationsData?.data?.recommendations?.length > 0
-                ? "Personalized recommendations based on your preferences"
-                : "Popular books in our collection"}
-            </p>
+            
           </div>
 
           {/* Books Grid */}

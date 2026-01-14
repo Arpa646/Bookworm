@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useParams } from "next/navigation";
 import {
   useGetSingleBookQuery,
   useGetBookReviewsQuery,
+  useGetMyRatingQuery,
+  useCreateRatingMutation,
   useCreateReviewMutation,
   useAddToShelfMutation,
   useGetMyLibraryQuery,
@@ -23,13 +25,16 @@ const BookDetailsPage = () => {
 
   const { data: bookData, isLoading } = useGetSingleBookQuery(bookId);
   const { data: reviewsData, refetch: refetchReviews } = useGetBookReviewsQuery(bookId);
+  const { data: myRatingData, refetch: refetchMyRating } = useGetMyRatingQuery(bookId, { skip: !user });
   const { data: libraryData, refetch: refetchShelves } = useGetMyLibraryQuery({});
+  const [createRating, { isLoading: isSubmittingRating }] = useCreateRatingMutation();
   const [createReview, { isLoading: isSubmittingReview }] = useCreateReviewMutation();
   const [addToShelf] = useAddToShelfMutation();
   const [updateReadingProgress] = useUpdateReadingProgressMutation();
 
   const book = bookData?.data;
   const reviews = reviewsData?.data?.filter((r: Review) => r.status === "approved") || [];
+  const myRating = myRatingData?.data;
 
   const shelves = libraryData?.data || [];
   const currentShelf = shelves.find((shelf: Shelf) => {
@@ -40,6 +45,9 @@ const BookDetailsPage = () => {
   const currentProgress = currentShelf?.progress || 0;
   const shelfId = currentShelf?._id;
 
+  const [ratingForm, setRatingForm] = useState({
+    rating: 0,
+  });
   const [reviewForm, setReviewForm] = useState({
     rating: 0,
     comment: "",
@@ -47,12 +55,50 @@ const BookDetailsPage = () => {
   const [progressForm, setProgressForm] = useState({
     pagesRead: "",
   });
-  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  
+  const [hoveredRatingForm, setHoveredRatingForm] = useState<number | null>(null);
+
+  // Initialize rating form with existing rating
+  useEffect(() => {
+    if (myRating?.rating) {
+      setRatingForm({ rating: myRating.rating });
+    } else {
+      setRatingForm({ rating: 0 });
+    }
+  }, [myRating]);
 
   const currentPagesRead =
     currentShelfStatus === "reading" && book?.pages && currentProgress
       ? Math.round((currentProgress / 100) * book.pages)
       : 0;
+
+  const handleRatingSubmit = async (rating: number) => {
+    if (!user) {
+      toast.error("Please login to submit a rating");
+      return;
+    }
+
+    if (rating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    try {
+      await createRating({
+        bookId: bookId,
+        rating: rating,
+      }).unwrap();
+
+      toast.success(myRating ? "Rating updated successfully!" : "Rating submitted successfully!");
+      setRatingForm({ rating: rating });
+      refetchMyRating();
+    } catch (error) {
+      const apiError = error as ApiError;
+      const errorMessage =
+        apiError?.data?.message || apiError?.data?.error || apiError?.message || "Failed to submit rating";
+      toast.error(errorMessage);
+    }
+  };
 
   const handleReviewSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -77,6 +123,7 @@ const BookDetailsPage = () => {
       toast.success("Review submitted! It will be visible after approval.");
       setReviewForm({ rating: 0, comment: "" });
       refetchReviews();
+      refetchMyRating();
     } catch (error) {
       const apiError = error as ApiError;
       const errorMessage =
@@ -693,6 +740,119 @@ const BookDetailsPage = () => {
               </p>
             </div>
 
+            {/* Rate This Book Section */}
+            {user && (
+              <div
+                className="animate-fade-in"
+                style={{
+                  background: "linear-gradient(145deg, rgba(25, 25, 25, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%)",
+                  borderRadius: "24px",
+                  padding: "28px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  animationDelay: "0.15s",
+                  opacity: 0,
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "22px",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    marginBottom: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  {myRating ? "Your Rating" : "Rate This Book"}
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => handleRatingSubmit(star)}
+                          onMouseEnter={() => setHoveredRatingForm(star)}
+                          onMouseLeave={() => setHoveredRatingForm(null)}
+                          disabled={isSubmittingRating}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: isSubmittingRating ? "not-allowed" : "pointer",
+                            padding: "4px",
+                            transition: "transform 0.2s ease",
+                            transform:
+                              (hoveredRatingForm && star <= hoveredRatingForm) || star <= ratingForm.rating
+                                ? "scale(1.2)"
+                                : "scale(1)",
+                            opacity: isSubmittingRating ? 0.5 : 1,
+                          }}
+                        >
+                          <svg
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill={
+                              (hoveredRatingForm && star <= hoveredRatingForm) || star <= ratingForm.rating
+                                ? "#ef4444"
+                                : "none"
+                            }
+                            stroke={
+                              (hoveredRatingForm && star <= hoveredRatingForm) || star <= ratingForm.rating
+                                ? "#ef4444"
+                                : "rgba(255, 255, 255, 0.3)"
+                            }
+                            strokeWidth="2"
+                          >
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                    {ratingForm.rating > 0 && (
+                      <span style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "16px", fontWeight: 500 }}>
+                        {ratingForm.rating} / 5
+                      </span>
+                    )}
+                    {isSubmittingRating && (
+                      <div
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          border: "2px solid rgba(255, 255, 255, 0.3)",
+                          borderTopColor: "#ffffff",
+                          borderRadius: "50%",
+                          animation: "spin 1s linear infinite",
+                        }}
+                      />
+                    )}
+                  </div>
+                  {myRating && myRating.createdAt && (
+                    <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px" }}>
+                      {myRating.rating !== ratingForm.rating
+                        ? "Click on a star to update your rating"
+                        : `Rated on ${new Date(myRating.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}`}
+                    </p>
+                  )}
+                  {!myRating && (
+                    <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "13px" }}>
+                      Click on a star to rate this book
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Write Review */}
             <div
               className="animate-fade-in"
@@ -725,53 +885,7 @@ const BookDetailsPage = () => {
               </h2>
 
               <form onSubmit={handleReviewSubmit}>
-                {/* Rating */}
-                <div style={{ marginBottom: "20px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: "rgba(255, 255, 255, 0.5)",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    Your Rating
-                  </label>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <button
-                        key={rating}
-                        type="button"
-                        onClick={() => setReviewForm({ ...reviewForm, rating })}
-                        onMouseEnter={() => setHoveredRating(rating)}
-                        onMouseLeave={() => setHoveredRating(null)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "4px",
-                          transition: "transform 0.2s ease",
-                          transform: (hoveredRating && rating <= hoveredRating) || rating <= reviewForm.rating ? "scale(1.2)" : "scale(1)",
-                        }}
-                      >
-                        <svg
-                          width="28"
-                          height="28"
-                          viewBox="0 0 24 24"
-                          fill={(hoveredRating && rating <= hoveredRating) || rating <= reviewForm.rating ? "#ef4444" : "none"}
-                          stroke={(hoveredRating && rating <= hoveredRating) || rating <= reviewForm.rating ? "#ef4444" : "rgba(255, 255, 255, 0.3)"}
-                          strokeWidth="2"
-                        >
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
+                
                 {/* Comment */}
                 <div style={{ marginBottom: "20px" }}>
                   <label
@@ -987,22 +1101,6 @@ const BookDetailsPage = () => {
                           </div>
                         </div>
 
-                        {/* Stars */}
-                        <div style={{ display: "flex", gap: "2px" }}>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg
-                              key={star}
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill={star <= review.rating ? "#ef4444" : "none"}
-                              stroke={star <= review.rating ? "#ef4444" : "rgba(255, 255, 255, 0.2)"}
-                              strokeWidth="2"
-                            >
-                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                          ))}
-                        </div>
                       </div>
 
                       <p style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "14px", lineHeight: "1.7" }}>
